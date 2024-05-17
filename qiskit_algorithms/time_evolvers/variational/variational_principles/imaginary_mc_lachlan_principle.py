@@ -101,6 +101,31 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             AlgorithmError: If a gradient job fails.
         """
 
+        # 0: Always check if Hamiltonian is Hermitian. If not, this will happen
+        # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
+
+        # h_dag = hamiltonian.adjoint()
+        # h_plus = hamiltonian + h_dag
+        # h_minus = hamiltonian - h_dag
+
+        # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
+
+        # try:
+        #    evolution_grad_lse_rhs_plus = (
+        #        self.gradient.run([ansatz], [h_plus], [param_values], [gradient_params])
+        #        .result()
+        #        .gradients[0]
+        #    )
+        #    evolution_grad_lse_rhs_minus = (
+        #        self.gradient.run([ansatz], [h_minus], [param_values], [gradient_params], anti-hermitian=True)
+        #        .result()
+        #        .gradients[0]
+        #    )
+        # except Exception as exc:
+        #    raise AlgorithmError("The gradient primitive job failed!") from exc
+
+        # 3: This is not enough, the circuits has to be modified. Has to be done in gradients/utils.py
+
         try:
             evolution_grad_lse_rhs = (
                 self.gradient.run([ansatz], [hamiltonian], [param_values], [gradient_params])
