@@ -94,6 +94,7 @@ class BaseEstimatorGradient(ABC):
         observables: Sequence[BaseOperator],
         parameter_values: Sequence[Sequence[float]],
         parameters: Sequence[Sequence[Parameter] | None] | None = None,
+        anti_hermitian: bool = False,
         **options,
     ) -> AlgorithmJob:
         """Run the job of the estimator gradient on the given circuits.

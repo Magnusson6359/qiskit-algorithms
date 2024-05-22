@@ -100,6 +100,7 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
         observables: Sequence[BaseOperator],
         parameter_values: Sequence[Sequence[float]],
         parameters: Sequence[Sequence[Parameter]],
+        anti_hermitian: bool = False,
         **options,
     ) -> EstimatorGradientResult:
         """Compute the estimator gradients on the given circuits."""
@@ -107,7 +108,7 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
             circuits, parameter_values, parameters, self.SUPPORTED_GATES
         )
         results = self._run_unique(
-            g_circuits, observables, g_parameter_values, g_parameters, **options
+            g_circuits, observables, g_parameter_values, g_parameters, anti_hermitian, **options
         )
         return self._postprocess(results, circuits, parameter_values, parameters)
 
@@ -117,6 +118,7 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
         observables: Sequence[BaseOperator],
         parameter_values: Sequence[Sequence[float]],
         parameters: Sequence[Sequence[Parameter]],
+        anti_hermitian: bool = False,
         **options,
     ) -> EstimatorGradientResult:
         """Compute the estimator gradients on the given circuits."""
@@ -132,7 +134,7 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
                 # Cache the circuits for the linear combination of unitaries.
                 # We only cache the circuits for the specified parameters in the future.
                 self._lin_comb_cache[circuit_key] = _make_lin_comb_gradient_circuit(
-                    circuit, add_measurement=False
+                    circuit, add_measurement=False, anti_hermitian=anti_hermitian
                 )
             lin_comb_circuits = self._lin_comb_cache[circuit_key]
             gradient_circuits = []

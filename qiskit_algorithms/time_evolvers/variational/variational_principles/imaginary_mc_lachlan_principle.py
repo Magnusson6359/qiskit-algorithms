@@ -35,6 +35,8 @@ from ....gradients import (
     LinCombEstimatorGradient,
 )
 
+def idiot_function(): # TODO: To be removed of course. Needed it to test the code.
+    print("Idiot function")
 
 class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
     """Class for an Imaginary McLachlan's Variational Principle. It aims to minimize the distance
@@ -102,41 +104,42 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         """
 
         # 0: Always check if Hamiltonian is Hermitian. If not, this will happen
-        # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
-
-        # h_dag = hamiltonian.adjoint()
-        # h_plus = hamiltonian + h_dag
-        # h_minus = hamiltonian - h_dag
+        is_non_hermitian = True
+        if is_non_hermitian:
+            # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
+            h_dag = hamiltonian.adjoint()
+            h_plus = hamiltonian + h_dag
+            h_minus = hamiltonian - h_dag
 
         # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
-
-        # try:
-        #    evolution_grad_lse_rhs_plus = (
-        #        self.gradient.run([ansatz], [h_plus], [param_values], [gradient_params])
-        #        .result()
-        #        .gradients[0]
-        #    )
-        #    evolution_grad_lse_rhs_minus = (
-        #        self.gradient.run([ansatz], [h_minus], [param_values], [gradient_params], anti-hermitian=True)
-        #        .result()
-        #        .gradients[0]
-        #    )
-        # except Exception as exc:
-        #    raise AlgorithmError("The gradient primitive job failed!") from exc
+            try:
+                evolution_grad_lse_rhs_plus = (
+                    self.gradient.run([ansatz], [h_plus], [param_values], [gradient_params])
+                    .result()
+                    .gradients[0]
+                )
+                evolution_grad_lse_rhs_minus = (
+                    self.gradient.run([ansatz], [h_minus], [param_values], [gradient_params], anti_hermitian=True)
+                    .result()
+                    .gradients[0]
+                )
+            except Exception as exc:
+                raise AlgorithmError("The gradient primitive job failed!") from exc
+            return -0.25 * evolution_grad_lse_rhs_plus - 0.25 * evolution_grad_lse_rhs_minus
 
         # 3: This is not enough, the circuits has to be modified. Has to be done in gradients/utils.py
-
-        try:
-            evolution_grad_lse_rhs = (
+        else:
+            try:
+                evolution_grad_lse_rhs = (
                 self.gradient.run([ansatz], [hamiltonian], [param_values], [gradient_params])
                 .result()
                 .gradients[0]
             )
 
-        except Exception as exc:
-            raise AlgorithmError("The gradient primitive job failed!") from exc
+            except Exception as exc:
+                raise AlgorithmError("The gradient primitive job failed!") from exc
 
-        return -0.5 * evolution_grad_lse_rhs
+            return -0.5 * evolution_grad_lse_rhs
 
     @staticmethod
     def _validate_grad_settings(gradient):
