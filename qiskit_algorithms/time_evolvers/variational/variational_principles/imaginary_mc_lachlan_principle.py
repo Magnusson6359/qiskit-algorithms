@@ -106,6 +106,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         # 0: Always check if Hamiltonian is Hermitian. If not, this will happen
         is_non_hermitian = True
         if is_non_hermitian:
+            print("Non Hermitian stuff going on")
             # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
             h_dag = hamiltonian.adjoint()
             h_plus = hamiltonian + h_dag

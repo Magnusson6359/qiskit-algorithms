@@ -52,8 +52,8 @@ seed = 170
 estimator = Estimator(options={'seed': seed})
 
 # The 2 main tunable parameters
-total_time=1
-num_timesteps = 1
+total_time=40
+num_timesteps = 10
 
 var_principle = ImaginaryMcLachlanPrinciple()
 time_evo = TimeEvolutionProblem(qubit_op, 
