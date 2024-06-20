@@ -148,7 +148,7 @@ class BaseEstimatorGradient(ABC):
         opts.update_options(**options)
         # Run the job.
         job = AlgorithmJob(
-            self._run, circuits, observables, parameter_values, parameters, **opts.__dict__
+            self._run, circuits, observables, parameter_values, parameters, **opts.__dict__, anti_hermitian = anti_hermitian
         )
         job.submit()
         return job
@@ -160,6 +160,7 @@ class BaseEstimatorGradient(ABC):
         observables: Sequence[BaseOperator],
         parameter_values: Sequence[Sequence[float]],
         parameters: Sequence[Sequence[Parameter]],
+        anti_hermitian: bool = False,
         **options,
     ) -> EstimatorGradientResult:
         """Compute the estimator gradients on the given circuits."""

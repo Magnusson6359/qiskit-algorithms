@@ -102,23 +102,23 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         Raises:
             AlgorithmError: If a gradient job fails.
         """
-
         # 0: Always check if Hamiltonian is Hermitian. If not, this will happen
         is_non_hermitian = True
         if is_non_hermitian:
-            print("Non Hermitian stuff going on")
             # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
             h_dag = hamiltonian.adjoint()
             h_plus = hamiltonian + h_dag
             h_minus = hamiltonian - h_dag
-
-        # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
+            # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
             try:
+                # I tried swapping these, cache issue has nothing to do with antihermiticity. Just order.
+                print("H plus:")
                 evolution_grad_lse_rhs_plus = (
                     self.gradient.run([ansatz], [h_plus], [param_values], [gradient_params])
                     .result()
                     .gradients[0]
                 )
+                print("H minus:")
                 evolution_grad_lse_rhs_minus = (
                     self.gradient.run([ansatz], [h_minus], [param_values], [gradient_params], anti_hermitian=True)
                     .result()
@@ -127,8 +127,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             except Exception as exc:
                 raise AlgorithmError("The gradient primitive job failed!") from exc
             return -0.25 * evolution_grad_lse_rhs_plus - 0.25 * evolution_grad_lse_rhs_minus
-
-        # 3: This is not enough, the circuits has to be modified. Has to be done in gradients/utils.py
+            # 3: This is not enough, the circuits has to be modified. Has to be done in gradients/utils.py
         else:
             try:
                 evolution_grad_lse_rhs = (
