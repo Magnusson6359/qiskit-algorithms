@@ -111,14 +111,13 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             h_minus = hamiltonian - h_dag
             # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
             try:
-                # I tried swapping these, cache issue has nothing to do with antihermiticity. Just order.
-                print("H plus:")
+                #print("H plus:")
                 evolution_grad_lse_rhs_plus = (
                     self.gradient.run([ansatz], [h_plus], [param_values], [gradient_params])
                     .result()
                     .gradients[0]
                 )
-                print("H minus:")
+                #print("H minus:")
                 evolution_grad_lse_rhs_minus = (
                     self.gradient.run([ansatz], [h_minus], [param_values], [gradient_params], anti_hermitian=True)
                     .result()
