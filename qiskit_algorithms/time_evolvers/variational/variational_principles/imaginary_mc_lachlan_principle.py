@@ -107,8 +107,8 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         if is_non_hermitian:
             # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
             h_dag = hamiltonian.adjoint()
-            h_plus = hamiltonian + h_dag
-            h_minus = hamiltonian - h_dag
+            h_plus = (hamiltonian + h_dag)/2.0
+            h_minus = (hamiltonian - h_dag)/2.0
             # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
             try:
                 #print("H plus:")
@@ -125,7 +125,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
                 )
             except Exception as exc:
                 raise AlgorithmError("The gradient primitive job failed!") from exc
-            return -0.25 * evolution_grad_lse_rhs_plus - 0.25 * evolution_grad_lse_rhs_minus
+            return -0.5 * np.real(evolution_grad_lse_rhs_plus + evolution_grad_lse_rhs_minus/1j)
             # 3: This is not enough, the circuits has to be modified. Has to be done in gradients/utils.py
         else:
             try:

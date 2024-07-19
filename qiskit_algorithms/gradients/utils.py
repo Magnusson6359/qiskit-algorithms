@@ -125,6 +125,8 @@ def _make_lin_comb_gradient_circuit(
     circuit_temp.sdg(qr_aux)
     circuit_temp.data.insert(1, circuit_temp.data.pop())
 
+    print(f"anti_hermitian in make_grad_circ: {anti_hermitian}")
+
     lin_comb_circuits = {}
     for i, instruction in enumerate(circuit_temp.data):
         if instruction.operation.is_parameterized():
@@ -137,8 +139,10 @@ def _make_lin_comb_gradient_circuit(
                 #lin_comb_circuit.h(qr_aux)
                 if anti_hermitian: 
                     lin_comb_circuit.rx(np.pi / 2, qr_aux)
+                    print(lin_comb_circuit)
                 else:
                     lin_comb_circuit.h(qr_aux)
+                    print(lin_comb_circuit)
                 if add_measurement:
                     lin_comb_circuit.measure(qr_aux, cr_aux)
                 lin_comb_circuits[p] = lin_comb_circuit

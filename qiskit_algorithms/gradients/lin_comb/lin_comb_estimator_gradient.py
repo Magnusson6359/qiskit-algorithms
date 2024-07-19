@@ -129,7 +129,7 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
         ):
             # Prepare circuits for the gradient of the specified parameters.
             meta = {"parameters": parameters_}
-            circuit_key = _circuit_key(circuit)
+            circuit_key = _circuit_key(circuit, anti_hermitian=anti_hermitian) # Shit solution but should work
             if circuit_key not in self._lin_comb_cache:
                 # Cache the circuits for the linear combination of unitaries.
                 # We only cache the circuits for the specified parameters in the future.
