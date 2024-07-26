@@ -197,7 +197,7 @@ class LinCombQGT(BaseQGT):
             phase_fix_obs = [
                 SparsePauliOp.from_list([("I" * circuit.num_qubits, 1)]) for circuit in circuits
             ]
-            #print("QGT:")
+            print("QGT:")
             phase_fix_job = self._gradient.run(
                 circuits=circuits,
                 observables=phase_fix_obs,

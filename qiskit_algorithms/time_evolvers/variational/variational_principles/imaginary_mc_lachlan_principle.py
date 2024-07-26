@@ -49,6 +49,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         self,
         qgt: BaseQGT | None = None,
         gradient: BaseEstimatorGradient | None = None,
+        is_non_hermitian: bool = False,
     ) -> None:
         """
         Args:
@@ -78,6 +79,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             qgt = LinCombQGT(estimator)
 
         super().__init__(qgt, gradient)
+        self.is_non_hermitian = is_non_hermitian
 
     def evolution_gradient(
         self,
@@ -103,21 +105,20 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             AlgorithmError: If a gradient job fails.
         """
         # 0: Always check if Hamiltonian is Hermitian. If not, this will happen
-        is_non_hermitian = True
-        if is_non_hermitian:
+        if self.is_non_hermitian:
             # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
             h_dag = hamiltonian.adjoint()
             h_plus = (hamiltonian + h_dag)/2.0
             h_minus = (hamiltonian - h_dag)/2.0
             # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
             try:
-                #print("H plus:")
+                print("H plus:")
                 evolution_grad_lse_rhs_plus = (
                     self.gradient.run([ansatz], [h_plus], [param_values], [gradient_params])
                     .result()
                     .gradients[0]
                 )
-                #print("H minus:")
+                print("H minus:")
                 evolution_grad_lse_rhs_minus = (
                     self.gradient.run([ansatz], [h_minus], [param_values], [gradient_params], anti_hermitian=True)
                     .result()
@@ -129,6 +130,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             # 3: This is not enough, the circuits has to be modified. Has to be done in gradients/utils.py
         else:
             try:
+                print("H:")
                 evolution_grad_lse_rhs = (
                 self.gradient.run([ansatz], [hamiltonian], [param_values], [gradient_params])
                 .result()
