@@ -50,6 +50,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         qgt: BaseQGT | None = None,
         gradient: BaseEstimatorGradient | None = None,
         is_non_hermitian: bool = False,
+        t_imag: bool = False,
     ) -> None:
         """
         Args:
@@ -80,6 +81,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
 
         super().__init__(qgt, gradient)
         self.is_non_hermitian = is_non_hermitian
+        self.t_imag = t_imag
 
     def evolution_gradient(
         self,
@@ -109,7 +111,20 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
             h_dag = hamiltonian.adjoint()
             h_plus = (hamiltonian + h_dag)/2.0
+            h_plus = h_plus.simplify()
+
             h_minus = (hamiltonian - h_dag)/2.0
+            h_minus = h_minus.simplify()  
+
+            # h_dag_mat = h_dag.to_matrix()
+            # h_plus_mat = h_plus.to_matrix()
+            # h_minus_mat = h_minus.to_matrix()
+            # print(h_dag_mat-h_dag_mat.conj().T)
+            # print(h_plus_mat-h_plus_mat.conj().T)
+            # print(h_minus_mat-h_minus_mat.conj().T)
+            if self.t_imag:
+                h_minus.coeffs = np.imag(h_minus.coeffs)
+
             # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
             try:
                 print("H plus:")
@@ -118,15 +133,18 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
                     .result()
                     .gradients[0]
                 )
+                print(-0.5 * evolution_grad_lse_rhs_plus)
                 print("H minus:")
                 evolution_grad_lse_rhs_minus = (
                     self.gradient.run([ansatz], [h_minus], [param_values], [gradient_params], anti_hermitian=True)
                     .result()
                     .gradients[0]
                 )
+                print(-0.5 * evolution_grad_lse_rhs_minus)
             except Exception as exc:
                 raise AlgorithmError("The gradient primitive job failed!") from exc
-            return -0.5 * np.real(evolution_grad_lse_rhs_plus + evolution_grad_lse_rhs_minus/1j)
+            #print(-0.5 * np.real(evolution_grad_lse_rhs_plus + evolution_grad_lse_rhs_minus/1j))
+            return -0.5 * np.real(evolution_grad_lse_rhs_plus + evolution_grad_lse_rhs_minus)
             # 3: This is not enough, the circuits has to be modified. Has to be done in gradients/utils.py
         else:
             try:
@@ -139,7 +157,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
 
             except Exception as exc:
                 raise AlgorithmError("The gradient primitive job failed!") from exc
-
+            print(-0.5 * evolution_grad_lse_rhs)
             return -0.5 * evolution_grad_lse_rhs
 
     @staticmethod

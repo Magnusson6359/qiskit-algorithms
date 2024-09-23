@@ -104,13 +104,14 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
         **options,
     ) -> EstimatorGradientResult:
         """Compute the estimator gradients on the given circuits."""
+
         g_circuits, g_parameter_values, g_parameters = self._preprocess(
-            circuits, parameter_values, parameters, self.SUPPORTED_GATES
+            circuits, parameter_values, parameters, self.SUPPORTED_GATES, anti_hermitian=anti_hermitian
         )
         results = self._run_unique(
             g_circuits, observables, g_parameter_values, g_parameters, anti_hermitian, **options
         )
-        return self._postprocess(results, circuits, parameter_values, parameters)
+        return self._postprocess(results, circuits, parameter_values, parameters, anti_hermitian=anti_hermitian)
 
     def _run_unique(
         self,
@@ -130,6 +131,7 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
             # Prepare circuits for the gradient of the specified parameters.
             meta = {"parameters": parameters_}
             circuit_key = _circuit_key(circuit, anti_hermitian=anti_hermitian) # Shit solution but should work
+
             if circuit_key not in self._lin_comb_cache:
                 # Cache the circuits for the linear combination of unitaries.
                 # We only cache the circuits for the specified parameters in the future.
@@ -141,12 +143,15 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
             for param in parameters_:
                 gradient_circuits.append(lin_comb_circuits[param])
             n = len(gradient_circuits)
+
             # Make the observable as :class:`~qiskit.quantum_info.SparsePauliOp` and
             # add an ancillary operator to compute the gradient.
             observable = init_observable(observable)
+
             observable_1, observable_2 = _make_lin_comb_observables(
                 observable, self._derivative_type
             )
+
             # If its derivative type is `DerivativeType.COMPLEX`, calculate the gradient
             # of the real and imaginary parts separately.
             meta["derivative_type"] = self.derivative_type
@@ -168,6 +173,7 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
             job_circuits,
             job_observables,
             job_param_values,
+            anti_hermitian=anti_hermitian,
             **options,
         )
         try:

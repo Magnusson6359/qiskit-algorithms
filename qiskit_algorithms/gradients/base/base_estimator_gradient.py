@@ -172,6 +172,7 @@ class BaseEstimatorGradient(ABC):
         parameter_values: Sequence[Sequence[float]],
         parameters: Sequence[Sequence[Parameter]],
         supported_gates: Sequence[str],
+        anti_hermitian: bool = False,
     ) -> tuple[Sequence[QuantumCircuit], Sequence[Sequence[float]], Sequence[Sequence[Parameter]]]:
         """Preprocess the gradient. This makes a gradient circuit for each circuit. The gradient
         circuit is a transpiled circuit by using the supported gates, and has unique parameters.
@@ -193,7 +194,7 @@ class BaseEstimatorGradient(ABC):
         g_parameter_values: list[Sequence[float]] = []
         g_parameters: list[Sequence[Parameter]] = []
         for circuit, parameter_value_, parameters_ in zip(circuits, parameter_values, parameters):
-            circuit_key = _circuit_key(circuit)
+            circuit_key = _circuit_key(circuit, anti_hermitian=anti_hermitian)
             if circuit_key not in self._gradient_circuit_cache:
                 unrolled = translator(circuit)
                 self._gradient_circuit_cache[circuit_key] = _assign_unique_parameters(unrolled)
@@ -213,6 +214,7 @@ class BaseEstimatorGradient(ABC):
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]],
         parameters: Sequence[Sequence[Parameter]],
+        anti_hermitian: bool = False,
     ) -> EstimatorGradientResult:
         """Postprocess the gradients. This method computes the gradient of the original circuits
         by applying the chain rule to the gradient of the circuits with unique parameters.
@@ -238,7 +240,7 @@ class BaseEstimatorGradient(ABC):
             ):
                 # If the derivative type is complex, cast the gradient to complex.
                 gradient = gradient.astype("complex")
-            gradient_circuit = self._gradient_circuit_cache[_circuit_key(circuit)]
+            gradient_circuit = self._gradient_circuit_cache[_circuit_key(circuit, anti_hermitian=anti_hermitian)]
             g_parameters = _make_gradient_parameters(gradient_circuit, parameters_)
             # Make a map from the gradient parameter to the respective index in the gradient.
             g_parameter_indices = {param: i for i, param in enumerate(g_parameters)}
