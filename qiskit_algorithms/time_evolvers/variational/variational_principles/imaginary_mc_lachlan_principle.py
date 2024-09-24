@@ -112,7 +112,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             h_minus = h_minus.simplify()  
             h_minus.coeffs = np.imag(h_minus.coeffs)
 
-            # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
+            # 2: Compute the gradient of each part
             try:
                 evolution_grad_lse_rhs_plus = (
                     self.gradient.run([ansatz], [h_plus], [param_values], [gradient_params])
