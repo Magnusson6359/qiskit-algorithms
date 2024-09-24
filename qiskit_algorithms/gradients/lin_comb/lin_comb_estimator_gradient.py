@@ -143,15 +143,12 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
             for param in parameters_:
                 gradient_circuits.append(lin_comb_circuits[param])
             n = len(gradient_circuits)
-
             # Make the observable as :class:`~qiskit.quantum_info.SparsePauliOp` and
             # add an ancillary operator to compute the gradient.
             observable = init_observable(observable)
-
             observable_1, observable_2 = _make_lin_comb_observables(
                 observable, self._derivative_type
             )
-
             # If its derivative type is `DerivativeType.COMPLEX`, calculate the gradient
             # of the real and imaginary parts separately.
             meta["derivative_type"] = self.derivative_type

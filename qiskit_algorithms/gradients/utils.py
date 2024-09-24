@@ -125,8 +125,6 @@ def _make_lin_comb_gradient_circuit(
     circuit_temp.sdg(qr_aux)
     circuit_temp.data.insert(1, circuit_temp.data.pop())
 
-    print(f"anti_hermitian in make_grad_circ: {anti_hermitian}")
-
     lin_comb_circuits = {}
     for i, instruction in enumerate(circuit_temp.data):
         if instruction.operation.is_parameterized():

@@ -35,8 +35,6 @@ from ....gradients import (
     LinCombEstimatorGradient,
 )
 
-def idiot_function(): # TODO: To be removed of course. Needed it to test the code.
-    print("Idiot function")
 
 class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
     """Class for an Imaginary McLachlan's Variational Principle. It aims to minimize the distance
@@ -127,28 +125,21 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
 
             # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
             try:
-                print("H plus:")
                 evolution_grad_lse_rhs_plus = (
                     self.gradient.run([ansatz], [h_plus], [param_values], [gradient_params])
                     .result()
                     .gradients[0]
                 )
-                print(-0.5 * evolution_grad_lse_rhs_plus)
-                print("H minus:")
                 evolution_grad_lse_rhs_minus = (
                     self.gradient.run([ansatz], [h_minus], [param_values], [gradient_params], anti_hermitian=True)
                     .result()
                     .gradients[0]
                 )
-                print(-0.5 * evolution_grad_lse_rhs_minus)
             except Exception as exc:
                 raise AlgorithmError("The gradient primitive job failed!") from exc
-            #print(-0.5 * np.real(evolution_grad_lse_rhs_plus + evolution_grad_lse_rhs_minus/1j))
             return -0.5 * np.real(evolution_grad_lse_rhs_plus + evolution_grad_lse_rhs_minus)
-            # 3: This is not enough, the circuits has to be modified. Has to be done in gradients/utils.py
         else:
             try:
-                print("H:")
                 evolution_grad_lse_rhs = (
                 self.gradient.run([ansatz], [hamiltonian], [param_values], [gradient_params])
                 .result()
@@ -157,7 +148,6 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
 
             except Exception as exc:
                 raise AlgorithmError("The gradient primitive job failed!") from exc
-            print(-0.5 * evolution_grad_lse_rhs)
             return -0.5 * evolution_grad_lse_rhs
 
     @staticmethod
