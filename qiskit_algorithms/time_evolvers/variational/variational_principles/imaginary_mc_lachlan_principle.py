@@ -48,7 +48,6 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         qgt: BaseQGT | None = None,
         gradient: BaseEstimatorGradient | None = None,
         is_non_hermitian: bool = False,
-        t_imag: bool = False,
     ) -> None:
         """
         Args:
@@ -79,7 +78,6 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
 
         super().__init__(qgt, gradient)
         self.is_non_hermitian = is_non_hermitian
-        self.t_imag = t_imag
 
     def evolution_gradient(
         self,
@@ -104,7 +102,6 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         Raises:
             AlgorithmError: If a gradient job fails.
         """
-        # 0: Always check if Hamiltonian is Hermitian. If not, this will happen
         if self.is_non_hermitian:
             # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
             h_dag = hamiltonian.adjoint()
@@ -113,15 +110,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
 
             h_minus = (hamiltonian - h_dag)/2.0
             h_minus = h_minus.simplify()  
-
-            # h_dag_mat = h_dag.to_matrix()
-            # h_plus_mat = h_plus.to_matrix()
-            # h_minus_mat = h_minus.to_matrix()
-            # print(h_dag_mat-h_dag_mat.conj().T)
-            # print(h_plus_mat-h_plus_mat.conj().T)
-            # print(h_minus_mat-h_minus_mat.conj().T)
-            if self.t_imag:
-                h_minus.coeffs = np.imag(h_minus.coeffs)
+            h_minus.coeffs = np.imag(h_minus.coeffs)
 
             # 2: Compute the gradient of each part (done in the try block below, assuming split Hamiltonian is given, twice)
             try:
