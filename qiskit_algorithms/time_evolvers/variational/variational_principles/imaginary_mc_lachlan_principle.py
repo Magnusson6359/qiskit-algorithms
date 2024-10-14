@@ -104,11 +104,9 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         """
         if self.is_non_hermitian:
             # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
-            h_dag = hamiltonian.adjoint()
-            h_plus = (hamiltonian + h_dag)/2.0
+            h_plus = (hamiltonian + hamiltonian.adjoint())/2.0
             h_plus = h_plus.simplify()
-
-            h_minus = (hamiltonian - h_dag)/2.0
+            h_minus = (hamiltonian - hamiltonian.adjoint())/2.0
             h_minus = h_minus.simplify()  
             h_minus.coeffs = np.imag(h_minus.coeffs)
 
