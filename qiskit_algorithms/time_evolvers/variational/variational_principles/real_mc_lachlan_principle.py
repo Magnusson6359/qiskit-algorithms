@@ -49,6 +49,7 @@ class RealMcLachlanPrinciple(RealVariationalPrinciple):
         self,
         qgt: BaseQGT | None = None,
         gradient: BaseEstimatorGradient | None = None,
+        is_non_hermitian: bool = False,
     ) -> None:
         """
         Args:
@@ -77,6 +78,9 @@ class RealMcLachlanPrinciple(RealVariationalPrinciple):
             qgt = LinCombQGT(estimator)
 
         super().__init__(qgt, gradient)
+        self.is_non_hermitian = is_non_hermitian
+
+        print("I want you to know that Hermiticity is", self.is_non_hermitian, "according to my beliefs")
 
     def evolution_gradient(
         self,
@@ -101,7 +105,6 @@ class RealMcLachlanPrinciple(RealVariationalPrinciple):
         Raises:
             AlgorithmError: If a gradient job fails.
         """
-
         try:
             estimator_job = self.gradient._estimator.run([ansatz], [hamiltonian], [param_values])
             energy = estimator_job.result().values[0]
@@ -109,29 +112,61 @@ class RealMcLachlanPrinciple(RealVariationalPrinciple):
             raise AlgorithmError("The primitive job failed!") from exc
 
         modified_hamiltonian = self._construct_modified_hamiltonian(hamiltonian, real(energy))
+        if self.is_non_hermitian:
+            h_plus = (modified_hamiltonian + modified_hamiltonian.adjoint())/2.0
+            h_plus = h_plus.simplify()
+            h_minus = (modified_hamiltonian - modified_hamiltonian.adjoint())/2.0
+            h_minus = h_minus.simplify()
+            h_minus.coeffs = np.imag(h_minus.coeffs)
 
-        try:
-            evolution_grad = (
-                0.5
-                * self.gradient.run(
-                    [ansatz],
-                    [modified_hamiltonian],
-                    parameters=[gradient_params],
-                    parameter_values=[param_values],
+            try:
+                evolution_grad_plus = (
+                    0.5
+                    * self.gradient.run(
+                        [ansatz],
+                        [h_plus],
+                        parameters=[gradient_params],
+                        parameter_values=[param_values],
+                    )
+                    .result()
+                    .gradients[0]
                 )
-                .result()
-                .gradients[0]
-            )
-        except Exception as exc:
-            raise AlgorithmError("The gradient primitive job failed!") from exc
-
+                evolution_grad_minus = (
+                    0.5
+                    * self.gradient.run(
+                        [ansatz],
+                        [h_minus],
+                        parameters=[gradient_params],
+                        parameter_values=[param_values],
+                    )
+                    .result()
+                    .gradients[0]
+                )
+            except Exception as exc:
+                raise AlgorithmError("The gradient primitive job failed!") from exc
+            return -0.5 * (evolution_grad_plus + evolution_grad_minus)
+        else:
+            try:
+                evolution_grad = (
+                    0.5
+                    * self.gradient.run(
+                        [ansatz],
+                        [modified_hamiltonian],
+                        parameters=[gradient_params],
+                        parameter_values=[param_values],
+                    )
+                    .result()
+                    .gradients[0]
+                )
+            except Exception as exc:
+                raise AlgorithmError("The gradient primitive job failed!") from exc
         # The BaseEstimatorGradient class returns the gradient of the opposite sign than we expect
         # here (i.e. with a minus sign), hence the correction that cancels it to recover the
         # real McLachlan's principle equations that do not have a minus sign.
         evolution_grad = (-1) * evolution_grad
         return evolution_grad
 
-    @staticmethod
+    @staticmethod 
     def _construct_modified_hamiltonian(hamiltonian: BaseOperator, energy: float) -> BaseOperator:
         """
         Modifies a Hamiltonian according to the rules of this variational principle.
