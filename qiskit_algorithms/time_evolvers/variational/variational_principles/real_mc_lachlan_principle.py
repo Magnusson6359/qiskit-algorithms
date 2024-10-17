@@ -144,7 +144,7 @@ class RealMcLachlanPrinciple(RealVariationalPrinciple):
                 )
             except Exception as exc:
                 raise AlgorithmError("The gradient primitive job failed!") from exc
-            return -0.5 * (evolution_grad_plus + evolution_grad_minus)
+            return -(evolution_grad_plus + evolution_grad_minus)
         else:
             try:
                 evolution_grad = (
@@ -164,6 +164,7 @@ class RealMcLachlanPrinciple(RealVariationalPrinciple):
         # here (i.e. with a minus sign), hence the correction that cancels it to recover the
         # real McLachlan's principle equations that do not have a minus sign.
         evolution_grad = (-1) * evolution_grad
+        print(evolution_grad)
         return evolution_grad
 
     @staticmethod 
