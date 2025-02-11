@@ -134,13 +134,10 @@ def _make_lin_comb_gradient_circuit(
                 # insert `gate` to i-th position
                 lin_comb_circuit.append(gate, [qr_aux[0]] + list(instruction.qubits), [])
                 lin_comb_circuit.data.insert(i, lin_comb_circuit.data.pop())
-                #lin_comb_circuit.h(qr_aux)
-                if anti_hermitian: 
+                if anti_hermitian:
                     lin_comb_circuit.rx(np.pi / 2, qr_aux)
-                    #print(lin_comb_circuit)
                 else:
                     lin_comb_circuit.h(qr_aux)
-                    #print(lin_comb_circuit)
                 if add_measurement:
                     lin_comb_circuit.measure(qr_aux, cr_aux)
                 lin_comb_circuits[p] = lin_comb_circuit

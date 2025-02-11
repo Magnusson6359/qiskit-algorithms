@@ -47,7 +47,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         self,
         qgt: BaseQGT | None = None,
         gradient: BaseEstimatorGradient | None = None,
-        is_non_hermitian: bool = False,
+        non_hermitian: bool = False,
     ) -> None:
         """
         Args:
@@ -55,6 +55,12 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
                 If ``None`` provided, ``LinCombQGT`` is used.
             gradient: Instance of a class used to compute the state gradient.
                 If ``None`` provided, ``LinCombEstimatorGradient`` is used.
+            non_hermitian: If True, the Hamiltonian is split into Hermitian and anti-Hermitian parts
+                and the gradient is computed for each part separately. The final gradient is the sum
+                of the gradients of the Hermitian and anti-Hermitian parts. This computes the gradient
+                even if the Hamiltonian is non-Hermitian, but requires more evaluations. Default is False.
+                As in https://doi.org/10.48550/arXiv.2201.03049
+
 
         Raises:
             AlgorithmError: If the gradient instance does not contain an estimator.
@@ -77,7 +83,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             qgt = LinCombQGT(estimator)
 
         super().__init__(qgt, gradient)
-        self.is_non_hermitian = is_non_hermitian
+        self.non_hermitian = non_hermitian
 
     def evolution_gradient(
         self,
@@ -102,7 +108,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         Raises:
             AlgorithmError: If a gradient job fails.
         """
-        if self.is_non_hermitian:
+        if self.non_hermitian:
             # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
             h_plus = (hamiltonian + hamiltonian.adjoint())/2.0
             h_plus = h_plus.simplify()

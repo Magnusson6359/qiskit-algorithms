@@ -80,8 +80,6 @@ class RealMcLachlanPrinciple(RealVariationalPrinciple):
         super().__init__(qgt, gradient)
         self.is_non_hermitian = is_non_hermitian
 
-        print("I want you to know that Hermiticity is", self.is_non_hermitian, "according to my beliefs")
-
     def evolution_gradient(
         self,
         hamiltonian: BaseOperator,
