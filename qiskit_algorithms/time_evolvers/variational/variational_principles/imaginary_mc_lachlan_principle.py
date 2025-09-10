@@ -47,6 +47,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         self,
         qgt: BaseQGT | None = None,
         gradient: BaseEstimatorGradient | None = None,
+        non_hermitian: bool = False,
     ) -> None:
         """
         Args:
@@ -54,6 +55,12 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
                 If ``None`` provided, ``LinCombQGT`` is used.
             gradient: Instance of a class used to compute the state gradient.
                 If ``None`` provided, ``LinCombEstimatorGradient`` is used.
+            non_hermitian: If True, the Hamiltonian is split into Hermitian and anti-Hermitian parts
+                and the gradient is computed for each part separately. The final gradient is the sum
+                of the gradients of the Hermitian and anti-Hermitian parts. This computes the gradient
+                even if the Hamiltonian is non-Hermitian, but requires more evaluations. Default is False.
+                As in https://doi.org/10.48550/arXiv.2201.03049
+
 
         Raises:
             AlgorithmError: If the gradient instance does not contain an estimator.
@@ -76,6 +83,7 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
             qgt = LinCombQGT(estimator)
 
         super().__init__(qgt, gradient)
+        self.non_hermitian = non_hermitian
 
     def evolution_gradient(
         self,
@@ -100,18 +108,40 @@ class ImaginaryMcLachlanPrinciple(ImaginaryVariationalPrinciple):
         Raises:
             AlgorithmError: If a gradient job fails.
         """
+        if self.non_hermitian:
+            # 1: Split Hamiltonian into Hermitian and anti-Hermitian parts by H^+ = H + H^\dagger, H^- = H - H^\dagger
+            h_plus = (hamiltonian + hamiltonian.adjoint())/2.0
+            h_plus = h_plus.simplify()
+            h_minus = (hamiltonian - hamiltonian.adjoint())/2.0
+            h_minus = h_minus.simplify()  
+            h_minus.coeffs = np.imag(h_minus.coeffs)
 
-        try:
-            evolution_grad_lse_rhs = (
+            # 2: Compute the gradient of each part
+            try:
+                evolution_grad_lse_rhs_plus = (
+                    self.gradient.run([ansatz], [h_plus], [param_values], [gradient_params])
+                    .result()
+                    .gradients[0]
+                )
+                evolution_grad_lse_rhs_minus = (
+                    self.gradient.run([ansatz], [h_minus], [param_values], [gradient_params], anti_hermitian=True)
+                    .result()
+                    .gradients[0]
+                )
+            except Exception as exc:
+                raise AlgorithmError("The gradient primitive job failed!") from exc
+            return -0.5 * np.real(evolution_grad_lse_rhs_plus + evolution_grad_lse_rhs_minus)
+        else:
+            try:
+                evolution_grad_lse_rhs = (
                 self.gradient.run([ansatz], [hamiltonian], [param_values], [gradient_params])
                 .result()
                 .gradients[0]
             )
 
-        except Exception as exc:
-            raise AlgorithmError("The gradient primitive job failed!") from exc
-
-        return -0.5 * evolution_grad_lse_rhs
+            except Exception as exc:
+                raise AlgorithmError("The gradient primitive job failed!") from exc
+            return -0.5 * evolution_grad_lse_rhs
 
     @staticmethod
     def _validate_grad_settings(gradient):

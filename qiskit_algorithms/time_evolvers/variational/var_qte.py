@@ -42,7 +42,7 @@ class VarQTE(ABC):
     """Variational Quantum Time Evolution.
 
     Algorithms that use variational principles to compute a time evolution for a given
-    Hermitian operator (Hamiltonian) and a quantum state prepared by a parameterized quantum
+    operator (Hamiltonian) and a quantum state prepared by a parameterized quantum
     circuit.
 
     Attributes:

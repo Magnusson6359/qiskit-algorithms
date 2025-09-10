@@ -113,6 +113,7 @@ def _make_param_shift_parameter_values(  # pylint: disable=invalid-name
 def _make_lin_comb_gradient_circuit(
     circuit: QuantumCircuit,
     add_measurement: bool = False,
+    anti_hermitian: bool = False,
 ) -> dict[Parameter, QuantumCircuit]:
     """Makes a circuit that computes the linear combination of the gradient circuits."""
     circuit_temp = circuit.copy()
@@ -134,7 +135,10 @@ def _make_lin_comb_gradient_circuit(
                 # insert `gate` to i-th position
                 lin_comb_circuit.append(gate, [qr_aux[0]] + list(instruction.qubits), [])
                 lin_comb_circuit.data.insert(i, lin_comb_circuit.data.pop())
-                lin_comb_circuit.h(qr_aux)
+                if anti_hermitian:
+                    lin_comb_circuit.rx(np.pi / 2, qr_aux)
+                else:
+                    lin_comb_circuit.h(qr_aux)
                 if add_measurement:
                     # Measure so that cr_aux is removed by the following line
                     lin_comb_circuit.measure(qr_aux, cr_aux)
