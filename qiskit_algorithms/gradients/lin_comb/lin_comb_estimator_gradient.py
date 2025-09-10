@@ -217,7 +217,7 @@ class LinCombEstimatorGradient(BaseEstimatorGradient):
                 pubs[index] = (new_circuit, new_observable) + pub[2:]
 
         # Run the single job with all circuits.
-        results = run_estimator_job(self._estimator, pubs) #TODO: add anti-hermitian.
+        results = run_estimator_job(self._estimator, pubs, anti_hermitian=anti_hermitian)
 
         # Compute the gradients.
         gradients = []

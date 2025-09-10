@@ -22,7 +22,7 @@ from qiskit.quantum_info import SparsePauliOp, PauliList
 
 
 def run_estimator_job(
-    estimator: BaseEstimatorV2, pubs: Iterable[EstimatorPubLike]
+    estimator: BaseEstimatorV2, pubs: Iterable[EstimatorPubLike], anti_hermitian: bool = False
 ) -> PrimitiveResult[PubResult]:
     """
     Accepts a sequence of EstimatorPubLike and returns the result of running the given Estimator on
@@ -100,7 +100,7 @@ def run_estimator_job(
             metadata={"version": 2},
         )
 
-    job = estimator.run(purged_pubs)
+    job = estimator.run(purged_pubs, anti_hermitian=anti_hermitian)
 
     # import here to avoid cyclic import
     # pylint: disable=cyclic-import
